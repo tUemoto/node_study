@@ -1,0 +1,39 @@
+const fs = require('fs');
+
+const originalRequire = require;
+
+function loadModule(filename, module, require) {
+  const wrappedSrc = `(function(module, exports, require){
+    ${fs.readFileSync(filename, 'utf8')}
+  })(module, module.exports, require)`;
+  eval(wrappedSrc);
+  console.log(fs.readFileSync(filename, 'utf8'));
+}
+
+// requireをvarで宣言するのは
+// SyntaxError: Identifier 'require' has already been declared
+// を出させないため
+var require = (moduleName) => {
+  console.log(`require invoked for module: ${moduleName}`);
+  const id = require.resolve(moduleName);
+  if (require.cache[id]) {
+    return require.cache[id].exports;
+  }
+
+  const module = {
+    exports: {},
+    id,
+  };
+  console.log(module);
+  require.cache[id] = module;
+  loadModule(id, module, require);
+  console.log(module);
+
+  return module.exports;
+};
+
+console.log('hoge');
+
+require.cache = {};
+require.resolve = moduleName => originalRequire.resolve(moduleName);
+require(process.argv[2]);
