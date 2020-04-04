@@ -16,7 +16,11 @@
     "url": "https://github.com/tUemoto/node_study/issues"
   },
   "homepage": "https://github.com/tUemoto/node_study#readme",
-  "dependencies": {},
+  "dependencies": {
+    "mkdirp": "^1.0.4",
+    "request": "^2.88.2",
+    "slug": "^2.1.1"
+  },
   "devDependencies": {
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^13.2.0",
