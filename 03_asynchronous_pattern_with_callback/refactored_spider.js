@@ -5,37 +5,48 @@ const mkdirp = require('mkdirp');
 const path = require('path');
 const utilities = require('./utilities');
 
+
+function saveFile(filename, contents, callback) {
+  mkdirp(path.dirname(filename), (err) => {
+    if (err) {
+      return callback(err);
+    }
+    fs.writeFile(filename, contents, callback);
+  });
+}
+
+function download(url, filename, callback) {
+  console.log(`Downloading ${url}`);
+  request(url, (err, response, body) => {
+    if (err) {
+      return callback(err);
+    }
+    saveFile(filename, body, (err) => {
+      if (err) {
+        return callback(err);
+      }
+      console.log(`Downloaded and saved: ${url}`);
+      callback(null, body);
+    });
+  });
+}
+
 /**
- * callback hell のお手本
+ * 機能単位で関数を切り出して、関数単位の行数を削減
+ * 早期リターンで、ネストを一段浅くしたバージョン
  * @param  {[type]}   url      [description]
  * @param  {Function} callback [description]
  * @return {[type]}            [description]
  */
 function spider(url, callback) {
   const filename = utilities.urlToFilename(url);
-  console.log('filename is ', filename);
-  console.log('dirname: ', path.dirname(filename));
   fs.exists(filename, (exists) => {
     if (!exists) {
-      console.log(`Downloading ${url}`);
-      request(url, (err, response, body) => {
+      download(url, filename, (err) => {
         if (err) {
-          callback(err);
-        } else {
-          mkdirp(path.dirname(filename), (mkdirErr) => {
-            if (mkdirErr) {
-              callback(mkdirErr);
-            } else {
-              fs.writeFile(filename, body, (fsErr) => {
-                if (fsErr) {
-                  callback(fsErr);
-                } else {
-                  callback(null, filename, true);
-                }
-              });
-            }
-          });
+          return callback(err);
         }
+        callback(null, filename, true);
       });
     } else {
       callback(null, filename, false);
