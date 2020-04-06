@@ -1,6 +1,6 @@
 # コールバックを用いた非同期パターン
 
-## 逐次処理まとめ
+## 逐次処理
 
 配列の各要素に対して非同期処理のタスクを実行する方法。
  **用途:**
@@ -38,7 +38,7 @@ iterate(0);
  * @param  {Array} collection    繰り返し処理を行いたい対象
  * @param  {Function} iteratorCallback current( = collection[i] )とコールバック関数を引数にとる関数
  * @param  {Function} finalCallback 処理の終了・中断時に呼ばれる関数
- * @return {None} 
+ * @return {None}
  */
 function iterateSeries(collection, iteratorCallback, finalCallback) {
   const threshold = collection.length;
