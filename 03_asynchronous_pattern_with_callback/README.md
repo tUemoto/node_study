@@ -46,17 +46,90 @@ function iterateSeries(collection, iteratorCallback, finalCallback) {
     if (index === threshold) {
       return finalCallback()
     }
-  }
-  const current = collection[index];
+    const current = collection[index];
 
-  iteratorCallback(current, (err) => {
-    if (err) {
-      return finalCallback(err)
-    }
-    return iterate(index + 1)
-  })
+    iteratorCallback(current, (err) => {
+      if (err) {
+        return finalCallback(err)
+      }
+      return iterate(index + 1)
+    })
+  }
 
   iterate(0)
 }
 
+```
+
+## 並行処理
+
+並行処理は、複数の非同期処理を実行する際に、処理の順番が特に重要ではなく、全ての処理が完了した際に通知してくれさえすれば事足りる時に使う。
+
+Nodeはシングルスレッドアーキテクチャなのにどうやってタスクを並行処理するのか?
+-> イベントループによりインタリーブされる形で複数のタスクが交互に実行される。
+
+上記を再利用可能なパターンとして一般化すると次の様になる
+
+```JavaScript
+const tasks =[ /*....*/ ];
+let completed = 0;
+
+tasks.forEach((task) => {
+  task(() => {
+    if (++completed === tasks.length) {
+      finish();
+    }
+  })
+});
+
+function finish() {
+  // 全てのタスク終了
+}
+
+```
+
+### 並行処理における競合状態
+
+Nodeは他の言語と違って単一のスレッドで複数のタスクを処理する様に設計されているため、並行処理は極々普通の状態(むしろこれこそがNodeの強み)。
+一方でタスク間の同期や、競合状態に対しては、非同期処理の完了を待ち受けるタスク間での同期の際の問題が日常的に発生するため注意が必要(複数のタスクが同じ対象に対して同じ処理を実行すると、進捗によっては結果が変わってしまう場合がある)。
+
+### 同時実行数を制限した並行処理パターン
+
+並行処理を行う場合、同時実行数を際限なく増やすと、いずれ過負荷の問題を招く。
+それを防ぐには、同時実行可能なタスク数の制御が重要。
+これにより、アプリケーションの負荷の最大値を予測でき、システムのリソースを使い切ってしまう事態を避けられる。
+
+これを実現するためのアルゴリズムは次の通り。
+
+1. 最初に制限いっぱいまでタスクを起動する
+2. タスクが完了するたびに制限いっぱいまでタスクを起動する
+
+これをコードにまとめると以下のようになる
+
+```JavaScript
+const tasks = ...;
+const concurrency = 2;
+let running = 0;
+let completed = 0;
+let index = 0;
+
+function next() {
+  while (running < concurrency && index < tasks.length) {
+    task = tasks[index++];
+    task(() => {
+      if (completed === tasks.length) {
+        return finish();
+      }
+      completed++;
+      running--;
+      next()
+    })
+  }
+}
+
+next();
+
+function finish() {
+  // 全てのタスク終了
+}
 ```
