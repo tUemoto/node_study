@@ -13,7 +13,7 @@ class TaskQueue {
   next() {
     while (this.running < this.concurrency && this.queue.length) {
       const task = this.queue.shift();
-      task(() => {
+      task().then(() => {
         this.running -= 1;
         this.next();
       });

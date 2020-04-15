@@ -66,5 +66,31 @@ ES2015のプロミスが提供しているAPIは以下の通り。
     - 新しいプロミスを生成。iterableに含まれるいずれかのthenableが解決した時点でプロミスはその値もしくは理由と共に解決される。
 * インスタンスメソッド
   - `promise.then(onFullfilled, onRejected)`
-  - `promise.catche(onRejected)`
+  - `promise.catch(onRejected)`
     - `promise.then(undefined, onRejected)`のシンタックスシュガー
+
+## 逐次イテレーションパターン
+
+```JavaScript
+// forEachを使った書きかた
+let tasks = [/* ... */]
+let promise = Promise.resolve()
+tasks.forEach((task) => {
+  promise = promise.then(() => {
+    return task()
+  })
+});
+promise.then(() => {
+  // all tasks completed
+})
+
+// reduceを使った書き方
+let tasks = [/* ... */]
+let promise = tasks.reduce((prev, task) => {
+  prev.then(() => { return task() })
+}, Promise.resolve())
+
+promise.then(() => {
+  // all tasks completed
+})
+```
