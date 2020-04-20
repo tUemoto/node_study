@@ -94,3 +94,42 @@ promise.then(() => {
   // all tasks completed
 })
 ```
+
+## ジェネレータ
+
+非同期の制御フローを簡単に記述するための機構の一つ。セミ子ルーチンと呼ばれることも。
+簡単にいうと **複数のエントリーポイントを持つ関数** 。通常の関数には一つのエントリポイントしかないが、ジェネレータでは`yield`により関数を一旦抜けたり、そこから再開できるようになる。ジェネレータは特にリストの処理に適しているため、これまで見てきた非同期の制御フローのパターンに適用できる。
+
+### 基礎
+
+ジェネレータはキーワード`function`の後ろに`*`を付加することで宣言する。
+
+```JavaScript
+function* makeGenerator() {
+  // 処理
+}
+```
+
+ジェネレータの中で、キーワード`yield`により処理を中断できる。
+`yield`には`return`と同様に戻り値を渡すことができる。
+
+```JavaScript
+function* makeGenerator() {
+  yield 'Hello world';
+  console.log('Re-entered');
+}
+
+const gen = makeGenerator()
+>>> gen.next() // next()を実行するために次のyieldまで処理が進む
+{
+  value: 'Hello world', // valueにはyieldに渡された戻り値が入る
+  done: False // doneには関数が全て完了した否かが格納
+}
+>>> gen.next()
+Re-entered
+{
+  value: undefined, //何も返さなければundefiendが返る
+  done: True
+}
+
+```
